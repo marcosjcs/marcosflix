@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Default from '../../../pages/Default'
+import Default from '../../Default';
 import FormField from '../../../components/FormField';
+import Button from '../../../components/Button';
 
 export default function AddCategory() {
   const initialValues = {
@@ -17,28 +18,45 @@ export default function AddCategory() {
     setCategory({
       ...category,
       [chave]: valor,
-    })
+    });
   }
 
   function handleChange(e) {
     setValue(
       e.target.getAttribute('name'),
-      e.target.value
+      e.target.value,
     );
   }
 
-  function handleNewCategory(e){
+  function handleNewCategory(e) {
     e.preventDefault();
-    
+
     setCategories([...categories, category]);
     setCategory(initialValues);
   }
 
+  useEffect(() => {
+    
+    const URL = window.location.href.includes('localhost') 
+          ? 'http://localhost:8080/categories' 
+          : 'https://chessflix.heroku.com/categories'; 
+    fetch(URL)
+      .then(async (response) =>{
+      if(response.ok) {
+        const data = await response.json();
+        setCategories(data);
+        return; 
+      }
+      throw new Error('Não foi possível carregar os dados.');
+      })
+    
+  }, []);
+
   return (
     <Default>
       <h1>Cadastro de Categoria</h1>
-      <form style={{background: category.color}} onSubmit={handleNewCategory}>
-        
+      <form onSubmit={handleNewCategory}>
+
         <FormField
           label="Nome da Categoria"
           type="text"
@@ -47,33 +65,14 @@ export default function AddCategory() {
           onChange={handleChange}
         />
 
-       
-          {/* <label>
-            Nome
-            <input 
-              type="text"
-              value={category.name}
-              name="name"
-              onChange={handleChange}
-            />
-          </label> */}
-       
-          {/* <label>
-            Descrição
-            <textarea 
-              value={category.description}
-              name="description"
-              onChange={handleChange}
-            />
-          </label> */}
-           <FormField
+        <FormField
           label="Descrição"
-          type="????"
+          type="textarea"
           name="description"
           value={category.description}
           onChange={handleChange}
         />
-        
+
         <FormField
           label="Cor"
           type="color"
@@ -81,33 +80,21 @@ export default function AddCategory() {
           value={category.color}
           onChange={handleChange}
         />
-          {/* <label>
-            Cor
-            <input 
-              type="color" 
-              value={category.color}
-              name="color"
-              onChange={handleChange}
-            />
-          </label> */}
-        
-        <button type="submit">
-            Cadastrar
-        </button>
+
+        <Button type="submit">
+          Cadastrar
+        </Button>
       </form>
 
       <ul>
-        {categories.map((category, index) => {
-          return (
-            <li key={index}>{category.name}</li>
-          )
-        })}
+        {categories.map((categoria) => (
+          <li key={categoria}>{categoria.title}</li>
+        ))}
       </ul>
-
 
       <Link to="/">
         Ir para Home
       </Link>
-    </Default>      
-  )
-};
+    </Default>
+  );
+}
